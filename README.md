@@ -62,29 +62,62 @@ EFML4A 回答的问题是：**在 Android 上应该怎么做？** 本仓库公�
 
 ## 五、工具
 
-纯 C11、无第三方依赖（除 zlib），详见 [`tools/README.md`](tools/README.md)：
+纯 C11、无第三方依赖（除 zlib）。每个工具的参数、示例与端到端流程见
+[`tools/README.md`](tools/README.md)。
+
+**依赖**
+
+| 依赖 | Termux | Debian / Ubuntu |
+| --- | --- | --- |
+| C11 编译器 | `pkg install clang` | `apt install build-essential` |
+| make | `pkg install make` | 同上 |
+| zlib | `pkg install zlib` | `apt install zlib1g-dev` |
+
+**构建**
 
 ```bash
 cd tools
-make          # 需要 clang / gcc + zlib
-make list
+make                 # 构建全部工具到 ./build
+make list            # 列出产物
+make help            # 构建说明
+make build/abpack    # 只构建单个工具
+make BUILD=out CC=gcc
+make clean
 ```
 
-| 工具 | 作用 |
-| --- | --- |
-| `vfsfull` | `.blc` 全解析（含 8 字节 tag 修正） |
-| `abtool` | `.ab` 熵图 / 字符串 / 节点 / 浮点密度 / 等长替换 |
-| `abpack` | **纯 C 自包含 `.ab` 重建器**（`min` / `pad` 两种模式） |
-| `abverify` | 重建后读回校验 |
-| `blcdump` / `blcfileinfo` / `blcsetdata` / `blcfix` | `.blc` 结构 dump、文件条目、`dataMd5` 更新、CRC 修复 |
-| `lz4invcomp4` / `lz4invtest` | LZ4Inv 压缩器与自测 |
-| `fextract` / `findchunk` / `chunknames` | 多线程提取、偏移定位、chunk 名 |
-| `ms` | 多线程内存模式搜索 |
-| `mktga` / `pxsample` / `scanmagenta` / `colordetect` / `mkpattern` / `checkrb` / `redbox` | 纯色/图案生成与像素校验（替代 Python 图像脚本） |
+**工具速查**
+
+| 工具 | 用法 | 作用 |
+| --- | --- | --- |
+| `vfsfull` 🔑 | `vfsfull <in.blc>` | `.blc` 全解析（含 8 字节 tag 修正） |
+| `blcdump` 🔑 | `blcdump <in.blc>` | 解密体逐字段 dump |
+| `chunknames` 🔑 | `chunknames <in.blc>` | chunk 名表 |
+| `findchunk` 🔑 | `findchunk <in.blc> <global_offset>` | 全局偏移 → chunk / 块内偏移 |
+| `blcsetdata` 🔑 | `blcsetdata <in.blc> <out.blc> <filename> <md5>` | 更新文件条目 `dataMd5` |
+| `blcfix` 🔑 | `blcfix <in.blc> <out.blc> <chk_md5> [md5Name]` | 更新 `contentMD5` + CRC32 |
+| `fextract` | `fextract <src> <list> <outdir> [threads]` | 多线程按 `off len name` 提取 |
+| `abtool` | `abtool <in.ab> [--dump]` | 校验头、解析块表与节点表 |
+| `abpack` | `abpack <in.ab> <out.ab> <streamOff> <new.bin> [min\|pad]` | **自包含 `.ab` 重建器** |
+| `abverify` | `abverify <in.ab> [stream] [target] [expect]` | 重建后读回校验 |
+| `lz4invtest` | `lz4invtest <in.bin>` | 压缩→解压→逐字节比对自测 |
+| `lz4invcomp4` | `lz4invcomp4 <in> <out>` | LZ4Inv 压缩器（v4） |
+| `ms` | `ms <pid> <hexpat> [max] [threads]` | 多线程内存模式搜索 |
+| `mktga` / `mkpattern` | `mktga <out.tga> <w> <h> <r> <g> <b>` | 生成纯色 / 测试图案 TGA |
+| `pxsample` / `scanmagenta` / `colordetect` / `checkrb` / `redbox` | `<in.png>` | 截图像素校验（替代 Python 脚本） |
+
+🔑 = 需要 `VFS_KEY` 环境变量（64 位十六进制）。
 
 > **关于密钥**：`.blc` 的解密密钥属于游戏运行时材料，本仓库**不提供**。
-> `vfsfull` 通过环境变量 `VFS_KEY`（64 位十六进制）接收，缺失时明确报错。
-> 因此本仓库的工具是「格式与算法」的完整实现，但**不能**直接解密任意游戏数据。
+> 上述 🔑 工具从环境变量 `VFS_KEY` 读取，缺失或格式非法时立即报错退出。
+> 因此本仓库提供的是「格式与算法」的完整实现，**不能**直接解密任意游戏数据。
+
+**最短上手**
+
+```bash
+cd tools && make
+export VFS_KEY=<64 位十六进制>
+./build/vfsfull path/to/game.blc | head -40
+```
 
 ## 六、合规红线
 
