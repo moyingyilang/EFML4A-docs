@@ -1,23 +1,8 @@
 # EFML4A VFS 工具链 —— 纯 C 构建
-#
-# 依赖: C11 编译器 (clang / gcc) + make + zlib
-#   Termux : pkg install clang make zlib
-#   Debian : apt install build-essential zlib1g-dev
-#
-# 用法:
-#   make                 构建全部工具到 $(BUILD)（默认 build/）
-#   make build/abpack    只构建单个工具
-#   make list            列出已构建产物
-#   make help            显示本帮助
-#   make clean           删除构建目录
-#
-# 变量:
-#   BUILD=out            指定输出目录
-#   CC=gcc               指定编译器（默认 clang）
-#   CFLAGS="-O2 -g"      覆盖编译参数
+# 用法: make [目标] / make clean / make list
 CC      ?= clang
 CFLAGS  ?= -O2 -std=c11 -Wall -Wextra -Wno-unused-parameter
-BUILD   ?= build
+BUILD   ?= ../.efml4a-bin
 
 COMMON  = deps.c vfsaes.c
 
@@ -56,7 +41,7 @@ $(BUILD)/chunknames: chunknames.c | $(BUILD)
 	@$(CC) $(CFLAGS) -o $@ chunknames.c
 $(BUILD)/mktga: mktga.c | $(BUILD)
 	@$(CC) $(CFLAGS) -o $@ mktga.c
-$(BUILD)/abtool: abtool.c $(COMMON) | $(BUILD)
+ $(BUILD)/abtool: abtool.c $(COMMON) | $(BUILD)
 	@$(CC) $(CFLAGS) -o $@ abtool.c $(COMMON)
 
 # --- 需要 pthread / zlib ---
@@ -82,13 +67,10 @@ $(BUILD)/colordetect: colordetect.c | $(BUILD)
 $(BUILD)/pxsample: pxsample.c | $(BUILD)
 	@$(CC) $(CFLAGS) -o $@ pxsample.c -lz
 
-help:
-	@sed -n '2,17p' Makefile
-
 list:
 	@echo "输出目录: $(BUILD)"
 	@ls -1 $(BUILD) 2>/dev/null || echo "(未构建)"
 
 clean:
 	rm -rf $(BUILD)
-.PHONY: all list help clean
+.PHONY: all list clean

@@ -7,28 +7,8 @@
 #include <stdint.h>
 #include <zlib.h>
 
-/* ── 密钥材料不随仓库分发 ────────────────────────────────────────────
- * 上游容器用 ChaCha20 加密，密钥属于游戏运行时材料，本项目【不提供】。
- * 若要复现解析流程，请自行通过环境变量 VFS_KEY 传入 64 位十六进制。
- */
-static uint8_t KEY[32];
-static int hexv(int c){
-    if(c>='0'&&c<='9')return c-'0';
-    if(c>='a'&&c<='f')return c-'a'+10;
-    if(c>='A'&&c<='F')return c-'A'+10;
-    return -1;
-}
-static int load_key(void){
-    const char*h=getenv("VFS_KEY");
-    if(!h||strlen(h)!=64){fprintf(stderr,"缺少环境变量 VFS_KEY（64 位十六进制）\n");return 1;}
-    for(int i=0;i<32;i++){
-        int a=hexv((unsigned char)h[i*2]),b=hexv((unsigned char)h[i*2+1]);
-        if(a<0||b<0){fprintf(stderr,"VFS_KEY 含非法字符\n");return 1;}
-        KEY[i]=(uint8_t)((a<<4)|b);
-    }
-    return 0;
-}
-
+static const uint8_t KEY[32]={0xe9,0x5b,0x31,0x7a,0xc4,0xf8,0x28,0x56,0x9d,0x23,0xa8,0x6b,0xf2,0x71,0xdc,0xb5,
+                              0x3e,0x84,0x6f,0xa7,0x5c,0x92,0x4d,0x67,0x1d,0xba,0x8e,0x38,0xf4,0xca,0x52,0xe1};
 static uint32_t rotl32(uint32_t x,int n){return (x<<n)|(x>>(32-n));}
 static void qr(uint32_t*s,int a,int b,int c,int d){
     s[a]+=s[b];s[d]^=s[a];s[d]=rotl32(s[d],16);
@@ -67,7 +47,6 @@ static uint8_t rU8(void){ck(1);return D[DP++];}
 static void rU128(uint8_t*o){ck(16);memcpy(o,D+DP,16);DP+=16;}
 int main(int c,char**v){
     if(c<2){ fprintf(stderr,"用法: vfsfull <in.blc>\n"); return 2; }
-    if(load_key()) return 1;
     FILE*f=fopen(v[1],"rb"); if(!f){perror(v[1]);return 1;}
     fseek(f,0,SEEK_END); long n=ftell(f); fseek(f,0,SEEK_SET);
     uint8_t*raw=malloc(n); if(fread(raw,1,n,f)!=(size_t)n) return 1; fclose(f);

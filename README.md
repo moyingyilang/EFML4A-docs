@@ -2,7 +2,7 @@
 
 **Android 端《明日方舟：终末地》mod 加载器研究 —— 格式逆向与工具链**
 
-[文档索引](docs/README.md) · [致谢](CREDITS.md) · [安全与合规](SECURITY.md) · [语言政策](LANGUAGE.md)
+[文档索引](docs/00-INDEX.md) · [致谢](CREDITS.md) · [安全与合规](SECURITY.md) · [语言政策](LANGUAGE.md)
 
 > 本仓库是 EFML4A 研究的**公开文档部分**：把格式逆向结论与自研工具开放给人类阅读与复用。
 > **不包含**逐轮实验日志、设备数据、密钥材料与任何游戏资源。

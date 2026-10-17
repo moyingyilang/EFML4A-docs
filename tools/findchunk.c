@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "vfs_key.h"
+static const uint8_t KEY[32]={0xe9,0x5b,0x31,0x7a,0xc4,0xf8,0x28,0x56,0x9d,0x23,0xa8,0x6b,0xf2,0x71,0xdc,0xb5,0x3e,0x84,0x6f,0xa7,0x5c,0x92,0x4d,0x67,0x1d,0xba,0x8e,0x38,0xf4,0xca,0x52,0xe1};
 static uint32_t rotl32(uint32_t x,int n){return (x<<n)|(x>>(32-n));}
 static void qr(uint32_t*s,int a,int b,int c,int d){
   s[a]+=s[b];s[d]^=s[a];s[d]=rotl32(s[d],16);
@@ -30,8 +30,6 @@ static void cx(const uint8_t n[12],uint8_t*b,size_t len){
     for(size_t i=0;i<l;i++)b[off+i]^=ks[i];}
 }
 int main(int c,char**v){
-  if(c<3){fprintf(stderr,"用法: findchunk <in.blc> <global_offset>\n");return 2;}
-  if(load_key()) return 1;
   FILE*f=fopen(v[1],"rb");fseek(f,0,SEEK_END);long n=ftell(f);fseek(f,0,SEEK_SET);
   uint8_t*b=malloc(n);if(fread(b,1,n,f)!=(size_t)n)return 1;fclose(f);
   uint8_t nonce[12];memcpy(nonce,b,12);
